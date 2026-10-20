@@ -8,7 +8,7 @@ window.PulsePlus={
     bar.innerHTML='<div><span class="eyebrow">GO BEYOND THE DEMO</span><strong>Build. Investigate. Keep your discoveries.</strong></div><div><button data-open-mode="4">＋ Visual builder</button><button data-open-mode="5">◎ Incident arena</button><button data-open-mode="6">▣ My experiments</button></div>';
     $('.commandbar').after(bar);
     $$('[data-open-mode]').forEach(b=>b.onclick=()=>switchView(Number(b.dataset.openMode)));
-    fetch('challenges.json?v=20261020.4').then(r=>{if(!r.ok)throw new Error('Incident scenarios could not load.');return r.json();}).then(cases=>{this.cases=cases;if(S.view===5)this.renderArena();}).catch(e=>showError(e.message));
+    fetch('challenges.json?v=20261020.4.1').then(r=>{if(!r.ok)throw new Error('Incident scenarios could not load.');return r.json();}).then(cases=>{this.cases=cases;if(S.view===5)this.renderArena();}).catch(e=>showError(e.message));
     if(location.hash==='#arena')switchView(5);
     if(location.hash==='#builder')switchView(4);
     if(location.hash==='#vault')switchView(6);
@@ -60,7 +60,7 @@ window.PulsePlus={
     for(const [key,value]of Object.entries({...c.initial,deadline:c.deadline})){
       $('#f-'+key).value=value;if($('#o-'+key))$('#o-'+key).textContent=value;
     }
-    this.activeChallenge=id;S.positions={};S.node=null;this.renderArena();analyze();
+    this.activeChallenge=id;$$('[data-preset]').forEach(b=>b.classList.remove('selected'));S.positions={};S.node=null;this.renderArena();analyze();
   },
   readVault(){
     try{const raw=localStorage.getItem(this.storageKey);if(!raw)return [];const v=JSON.parse(raw);if(!Array.isArray(v))throw new Error();return v.slice(0,12).filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&x.input);}
@@ -72,9 +72,10 @@ window.PulsePlus={
   },
   restore(value){
     const p=PulseVault.normalize(value);
+    if(S.busy)stop();
     for(const [key,,type]of C.fields){const e=$('#f-'+key);e.value=p[key]??C.sample[key]??'';if(type==='range')$('#o-'+key).textContent=e.value;}
     this.activeChallenge=p.challenge&&this.cases.some(c=>c.id===p.challenge)?p.challenge:null;S.positions={};this.editing=null;
-    toast('Experiment restored locally. Run to recompute its results.');switchView(0);
+    S.result=null;S.input=null;S.preview=false;$('#export').disabled=true;$('#snapshot').disabled=true;$('#artifacts').replaceChildren();$('#metrics').innerHTML=metricHTML([{label:'Model',value:'Restored'},{label:'Activities',value:JSON.parse(p.pipeline).length},{label:'Results',value:'Not run'},{label:'Storage',value:'Local only'}]);$('#runtime').textContent='Draft restored · run Python to compute results';toast('Experiment restored locally. Run to compute its results.');switchView(0);
   },
   renderVault(){
     const items=this.readVault();
@@ -96,7 +97,7 @@ window.PulsePlus={
     const planner=S.result?.lab?.planner;if(!planner)return;
     const part=document.createElement('section');part.className='capacity-planner';
     part.innerHTML=heading('Capacity planning frontier','Python reruns this recovery model with each worker budget. Choose a completion target in the controls.',planner.deadline+'s TARGET')+
-    `<div class="capacity-summary"><strong>${planner.recommendation?planner.recommendation.workers+' workers':'No feasible budget'}</strong><p class="small">${planner.recommendation?'Smallest tested worker budget that completes every activity within the target.':'None of the 1–8 worker budgets complete every activity within this target. Address failures or revise the timing model.'} ${planner.repair?'Assumes the selected repair: '+esc(planner.repair)+'.':'No repair is assumed.'}</p></div>`+
+    `<div class="capacity-summary"><strong>${planner.recommendation?planner.recommendation.workers+(planner.recommendation.workers===1?' worker':' workers'):'No feasible budget'}</strong><p class="small">${planner.recommendation?'Smallest tested worker budget that completes every activity within the target.':'None of the 1–8 worker budgets complete every activity within this target. Address failures or revise the timing model.'} ${planner.repair?'Assumes the selected repair: '+esc(planner.repair)+'.':'No repair is assumed.'}</p></div>`+
     `<div class="capacity-bars">${planner.policies.map(p=>`<button data-workers="${p.workers}" class="${p.meets_target?'feasible':''}" aria-label="Use ${p.workers} workers"><span>${p.workers}</span><i style="height:${Math.max(5,100*p.wall_time/Math.max(...planner.policies.map(x=>x.wall_time)))}%"></i><b>${p.wall_time}s</b></button>`).join('')}</div>`+
     table(['Workers','Wall time','Completed','Compute utilization','Within target'],planner.policies.map(p=>[p.workers,p.wall_time+'s',p.completed+'/'+S.result.lab.nodes.length,p.compute_utilization+'%',p.meets_target?'yes':'no']))+
     '<p class="small">Click a bar to apply that worker budget. Compute utilization excludes backoff and is not a billing estimate. This deterministic comparison assumes the same graph, retry budget, and selected repair.</p>';

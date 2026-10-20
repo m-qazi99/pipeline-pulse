@@ -10,6 +10,8 @@ An interactive failure laboratory for data pipelines. Shape a DAG, inject a faul
 
 <p align="center"><a href="https://m-qazi99.github.io/pipeline-pulse/"><img src="docs/studio-preview.jpg" alt="pipeline-pulse studio running actual Python" width="100%"></a></p>
 
+<p align="center"><img src="docs/arena-preview.jpg" alt="Python-graded incident arena with a solved capacity challenge" width="100%"></p>
+
 ## Build, solve, and keep experiments
 
 - **Visual pipeline builder** — add/edit activities, pick upstream dependencies, undo graph edits, then validate and simulate through Python. Deletion preserves existing downstream references.
