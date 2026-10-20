@@ -1,0 +1,10 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const {normalize}=require('../docs/vault.js');
+const base=()=>({workspace:'studio',pipeline:JSON.stringify([{id:'a',duration:10,depends:[]}]),concurrency:2});
+test('accepts exported result envelopes',()=>assert.deepEqual(normalize({input:base(),result:{}}),base()));
+test('removes unrecognized and prototype-oriented fields',()=>{const out=normalize({...base(),constructor:'ignore',unexpected:'ignore'});assert.equal(Object.hasOwn(out,'constructor'),false);assert.equal(Object.hasOwn(out,'unexpected'),false);});
+test('rejects invalid pipeline JSON',()=>assert.throws(()=>normalize({...base(),pipeline:'not json'})));
+test('rejects array roots and empty graphs',()=>{assert.throws(()=>normalize([]));assert.throws(()=>normalize({...base(),pipeline:'[]'}));});
+test('rejects object-valued control inputs',()=>assert.throws(()=>normalize({...base(),concurrency:{malicious:true}})));
+test('rejects nonfinite control values',()=>assert.throws(()=>normalize({...base(),retries:Infinity})));
+test('bounds imported graph size',()=>assert.throws(()=>normalize({...base(),pipeline:JSON.stringify(Array.from({length:41},(_,i)=>({id:String(i)})))})));
+test('preserves labels as data for text-safe rendering',()=>{const p={...base(),pipeline:JSON.stringify([{id:'a',label:'<img onerror=alert(1)>',depends:[]}])};assert.equal(normalize(p).pipeline,p.pipeline);});

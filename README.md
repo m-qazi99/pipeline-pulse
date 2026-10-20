@@ -10,6 +10,15 @@ An interactive failure laboratory for data pipelines. Shape a DAG, inject a faul
 
 <p align="center"><a href="https://m-qazi99.github.io/pipeline-pulse/"><img src="docs/studio-preview.jpg" alt="pipeline-pulse studio running actual Python" width="100%"></a></p>
 
+## Build, solve, and keep experiments
+
+- **Visual pipeline builder** — add/edit activities, pick upstream dependencies, undo graph edits, then validate and simulate through Python. Deletion preserves existing downstream references.
+- **Incident arena** — three graded synthetic challenges: bounded retries, worker contention, and repairing the upstream cause. Python enforces original topology/timing and policy constraints.
+- **Capacity planner** — compares one through eight workers under the same recovery assumptions; recommends the smallest budget that completes every activity within the target. Included in Recovery comparison.
+- **Saved experiments** — explicitly save named inputs in browser-local storage, reopen them after reload, export JSON, or import existing experiment files. No cloud account or upload. At most 12 saved inputs; each can be deleted locally.
+
+[Open the incident arena](https://m-qazi99.github.io/pipeline-pulse/#arena) · [Open the visual builder](https://m-qazi99.github.io/pipeline-pulse/#builder)
+
 ## Explore the product
 
 Select **Cascade failure** → inspect `transform` → open **Recovery comparison** → compare completion coverage → replay the execution.
@@ -21,7 +30,7 @@ Select **Cascade failure** → inspect `transform` → open **Recovery compariso
 | Interactive execution replay | Python-computed results, accessible controls, and exportable evidence |
 | Critical path and recovery comparisons | Python-computed results, accessible controls, and exportable evidence |
 
-The interface includes three synthetic scenarios, four workspace views, light multicolor themes, editable inputs, local file loading, in-memory experiment snapshots, keyboard shortcuts, and downloadable artifacts. The **input editor** exposes the real experiment rather than hiding the model behind a decorative dashboard.
+The interface includes three synthetic scenarios, seven workspace views, light multicolor themes, editable inputs, local file loading, in-memory experiment snapshots, keyboard shortcuts, and downloadable artifacts. The **input editor** exposes the real experiment rather than hiding the model behind a decorative dashboard.
 
 ## Python mechanics
 
@@ -51,6 +60,7 @@ curl -s http://127.0.0.1:8000/api/analyze \
 # Engine, boundary, and regression tests
 python -m unittest discover -s tests -v
 python scripts/check_site.py
+node --test tests/vault.test.cjs
 
 # Regenerate the labeled synthetic first-visit preview
 python scripts/build_preview.py
@@ -69,12 +79,15 @@ flowchart TD
     A["Native CLI or local HTTP API"] --> E
 ```
 
+- `src/challenges.py` — fixed exercise definitions and deterministic grading.
+- `docs/studio-plus.js` — visual builder, incident arena, and local experiment vault.
+- `docs/vault.js` — strict import boundary with Node tests.
 - `src/lab.py` — the advanced, dependency-free Python computation.
 - `src/engine.py` — explicit version routing and original API compatibility.
 - `docs/lab.py`, `docs/engine.py`, `docs/common.py` — byte-identical browser copies, checked by CI.
 - `docs/studio.js` — rendering, interaction, worker lifecycle; no duplicate analytical algorithm.
 - `docs/worker.js` — pinned Pyodide 0.27.7 runtime in a Web Worker.
-- `tests/` — **26 automated tests**, including scenario boundaries and regressions.
+- `tests/` — **41 Python tests and 8 JavaScript import-boundary tests**, including scenario boundaries and regressions.
 - `.github/workflows/tests.yml` — tests and browser/native source parity on each push.
 
 ## Scope and limitations

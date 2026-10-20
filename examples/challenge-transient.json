@@ -1,0 +1,11 @@
+{
+  "workspace": "studio",
+  "pipeline": "[\n  {\n    \"id\": \"storage_read\",\n    \"label\": \"Storage Read\",\n    \"duration\": 12,\n    \"depends\": [],\n    \"failures\": 1,\n    \"kind\": \"activity\"\n  },\n  {\n    \"id\": \"landing\",\n    \"label\": \"Landing\",\n    \"duration\": 20,\n    \"depends\": [\n      \"storage_read\"\n    ],\n    \"failures\": 0,\n    \"kind\": \"activity\"\n  },\n  {\n    \"id\": \"quality_gate\",\n    \"label\": \"Quality Gate\",\n    \"duration\": 8,\n    \"depends\": [\n      \"landing\"\n    ],\n    \"failures\": 0,\n    \"kind\": \"activity\"\n  },\n  {\n    \"id\": \"sales_mart\",\n    \"label\": \"Sales Mart\",\n    \"duration\": 12,\n    \"depends\": [\n      \"quality_gate\"\n    ],\n    \"failures\": 0,\n    \"kind\": \"activity\"\n  }\n]",
+  "inject": "",
+  "challenge": "transient",
+  "deadline": 80,
+  "concurrency": 2,
+  "retries": 0,
+  "backoff": 5,
+  "repair": ""
+}

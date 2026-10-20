@@ -1,0 +1,181 @@
+[
+  {
+    "id": "transient",
+    "title": "The transient failure",
+    "level": "01 / Retry strategy",
+    "brief": "A storage read fails once before succeeding. Deliver the mart within 80 seconds without changing the graph or repairing a node.",
+    "hint": "One failed attempt consumes a full activity duration. A bounded retry can recover this fault; backoff still counts against the target.",
+    "deadline": 80,
+    "max_workers": 2,
+    "max_retries": 2,
+    "repair_node": null,
+    "pipeline": [
+      {
+        "id": "storage_read",
+        "label": "Storage Read",
+        "duration": 12,
+        "depends": [],
+        "failures": 1,
+        "kind": "activity"
+      },
+      {
+        "id": "landing",
+        "label": "Landing",
+        "duration": 20,
+        "depends": [
+          "storage_read"
+        ],
+        "failures": 0,
+        "kind": "activity"
+      },
+      {
+        "id": "quality_gate",
+        "label": "Quality Gate",
+        "duration": 8,
+        "depends": [
+          "landing"
+        ],
+        "failures": 0,
+        "kind": "activity"
+      },
+      {
+        "id": "sales_mart",
+        "label": "Sales Mart",
+        "duration": 12,
+        "depends": [
+          "quality_gate"
+        ],
+        "failures": 0,
+        "kind": "activity"
+      }
+    ],
+    "initial": {
+      "concurrency": 2,
+      "retries": 0,
+      "backoff": 5,
+      "repair": ""
+    }
+  },
+  {
+    "id": "capacity",
+    "title": "The crowded worker pool",
+    "level": "02 / Capacity planning",
+    "brief": "Three independent extracts feed a shared model. Complete the dashboard within 80 seconds using at most four workers. Keep the activity definitions intact.",
+    "hint": "The three sources can run concurrently. Follow their dependency boundaries before increasing retries.",
+    "deadline": 80,
+    "max_workers": 4,
+    "max_retries": 1,
+    "repair_node": null,
+    "pipeline": [
+      {
+        "id": "orders",
+        "label": "Orders",
+        "duration": 40,
+        "depends": [],
+        "failures": 0,
+        "kind": "activity"
+      },
+      {
+        "id": "customers",
+        "label": "Customers",
+        "duration": 40,
+        "depends": [],
+        "failures": 0,
+        "kind": "activity"
+      },
+      {
+        "id": "products",
+        "label": "Products",
+        "duration": 40,
+        "depends": [],
+        "failures": 0,
+        "kind": "activity"
+      },
+      {
+        "id": "model",
+        "label": "Model",
+        "duration": 20,
+        "depends": [
+          "orders",
+          "customers",
+          "products"
+        ],
+        "failures": 0,
+        "kind": "activity"
+      },
+      {
+        "id": "dashboard",
+        "label": "Dashboard",
+        "duration": 10,
+        "depends": [
+          "model"
+        ],
+        "failures": 0,
+        "kind": "activity"
+      }
+    ],
+    "initial": {
+      "concurrency": 1,
+      "retries": 0,
+      "backoff": 5,
+      "repair": ""
+    }
+  },
+  {
+    "id": "schema",
+    "title": "Repair the upstream cause",
+    "level": "03 / Dependency reasoning",
+    "brief": "The contract activity persistently fails. Select the single activity to repair in the recovery comparison, restore every asset, and finish within 100 seconds. At most one retry is allowed.",
+    "hint": "A blocked dashboard is a symptom. Repairing a downstream activity does not repair its upstream contract.",
+    "deadline": 100,
+    "max_workers": 2,
+    "max_retries": 1,
+    "repair_node": "contract",
+    "pipeline": [
+      {
+        "id": "source",
+        "label": "Source",
+        "duration": 10,
+        "depends": [],
+        "failures": 0,
+        "kind": "activity"
+      },
+      {
+        "id": "contract",
+        "label": "Contract",
+        "duration": 15,
+        "depends": [
+          "source"
+        ],
+        "failures": 10,
+        "kind": "activity"
+      },
+      {
+        "id": "model",
+        "label": "Model",
+        "duration": 25,
+        "depends": [
+          "contract"
+        ],
+        "failures": 0,
+        "kind": "activity"
+      },
+      {
+        "id": "dashboard",
+        "label": "Dashboard",
+        "duration": 8,
+        "depends": [
+          "model"
+        ],
+        "failures": 0,
+        "kind": "activity"
+      }
+    ],
+    "initial": {
+      "concurrency": 2,
+      "retries": 0,
+      "backoff": 5,
+      "repair": ""
+    }
+  }
+]

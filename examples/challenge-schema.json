@@ -1,0 +1,11 @@
+{
+  "workspace": "studio",
+  "pipeline": "[\n  {\n    \"id\": \"source\",\n    \"label\": \"Source\",\n    \"duration\": 10,\n    \"depends\": [],\n    \"failures\": 0,\n    \"kind\": \"activity\"\n  },\n  {\n    \"id\": \"contract\",\n    \"label\": \"Contract\",\n    \"duration\": 15,\n    \"depends\": [\n      \"source\"\n    ],\n    \"failures\": 10,\n    \"kind\": \"activity\"\n  },\n  {\n    \"id\": \"model\",\n    \"label\": \"Model\",\n    \"duration\": 25,\n    \"depends\": [\n      \"contract\"\n    ],\n    \"failures\": 0,\n    \"kind\": \"activity\"\n  },\n  {\n    \"id\": \"dashboard\",\n    \"label\": \"Dashboard\",\n    \"duration\": 8,\n    \"depends\": [\n      \"model\"\n    ],\n    \"failures\": 0,\n    \"kind\": \"activity\"\n  }\n]",
+  "inject": "",
+  "challenge": "schema",
+  "deadline": 100,
+  "concurrency": 2,
+  "retries": 0,
+  "backoff": 5,
+  "repair": ""
+}

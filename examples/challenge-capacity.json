@@ -1,0 +1,11 @@
+{
+  "workspace": "studio",
+  "pipeline": "[\n  {\n    \"id\": \"orders\",\n    \"label\": \"Orders\",\n    \"duration\": 40,\n    \"depends\": [],\n    \"failures\": 0,\n    \"kind\": \"activity\"\n  },\n  {\n    \"id\": \"customers\",\n    \"label\": \"Customers\",\n    \"duration\": 40,\n    \"depends\": [],\n    \"failures\": 0,\n    \"kind\": \"activity\"\n  },\n  {\n    \"id\": \"products\",\n    \"label\": \"Products\",\n    \"duration\": 40,\n    \"depends\": [],\n    \"failures\": 0,\n    \"kind\": \"activity\"\n  },\n  {\n    \"id\": \"model\",\n    \"label\": \"Model\",\n    \"duration\": 20,\n    \"depends\": [\n      \"orders\",\n      \"customers\",\n      \"products\"\n    ],\n    \"failures\": 0,\n    \"kind\": \"activity\"\n  },\n  {\n    \"id\": \"dashboard\",\n    \"label\": \"Dashboard\",\n    \"duration\": 10,\n    \"depends\": [\n      \"model\"\n    ],\n    \"failures\": 0,\n    \"kind\": \"activity\"\n  }\n]",
+  "inject": "",
+  "challenge": "capacity",
+  "deadline": 80,
+  "concurrency": 1,
+  "retries": 0,
+  "backoff": 5,
+  "repair": ""
+}

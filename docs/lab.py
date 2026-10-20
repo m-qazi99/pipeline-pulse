@@ -83,4 +83,19 @@ def run(p):
     rows=[[r['id'],r['status'],r['start'] if r['start'] is not None else '—',r['end'],r['attempts'],r['wait']] for r in primary['records']]
     report={'scenario':primary,'recovery':recovered,'critical_path':path,'critical_lower_bound':earliest[end],'blast_radius':sorted(affected),'assumptions':['Deterministic synthetic simulation; no Azure resources are contacted.','Retries hold the worker slot during backoff. Each failed attempt consumes the configured duration.','Critical path is the dependency lower bound with healthy nodes and unlimited concurrency.']}
     out=result('Pipeline simulation complete',[metric('Completed',f"{primary['succeeded']}/{len(nodes)}"),metric('Blocked assets',primary['blocked']),metric('Wall time',f"{primary['wall_time']}s"),metric('Recovery completion',f"{recovered['succeeded']}/{len(nodes)}")],['Activity','Outcome','Start (s)','End (s)','Attempts','Backoff (s)'],rows,[finding('info','Recovery is a comparison, not an executed fix','The comparison removes failures from the selected recovery node. It does not change cloud resources.')],artifacts=[{'name':'pipeline-experiment.json','content':json.dumps(report,indent=2)},{'name':'pipeline-definition.json','content':json.dumps(list(nodes.values()),indent=2)}])
-    out['lab']={**report,'nodes':[{**nodes[k],'intrinsic_failures':intrinsic[k],'level':levels[k]} for k in order]};return out
+    deadline=integer(p.get('deadline',240),'Completion target',1,86400)
+    capacities=[]
+    for workers in range(1,9):
+        trial=simulate(nodes,order,workers,retries,backoff,repair)
+        complete=trial['succeeded']==len(nodes)
+        capacities.append({'workers':workers,'wall_time':trial['wall_time'],
+            'completed':trial['succeeded'],'meets_target':complete and trial['wall_time']<=deadline,
+            'compute_utilization':round(100*trial['compute_seconds']/max(1,trial['wall_time']*workers),1)})
+    planner={'deadline':deadline,'policies':capacities,
+             'recommendation':next((x for x in capacities if x['meets_target']),None),
+             'repair':repair or None}
+    challenge=None
+    if p.get('challenge'):
+        from challenges import evaluate
+        challenge=evaluate(p['challenge'],nodes,p,primary,recovered)
+    out['lab']={'planner':planner,'challenge':challenge,**report,'nodes':[{**nodes[k],'intrinsic_failures':intrinsic[k],'level':levels[k]} for k in order]};return out

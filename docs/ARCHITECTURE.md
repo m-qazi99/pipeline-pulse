@@ -31,3 +31,13 @@ The repository tests both the original and advanced engine, serialization, algor
 ## First-visit preview
 
 `sample-result.js` contains the native Python result for the synthetic studio sample, generated at build time. The UI labels it Synthetic preview until the visitor runs the worker. Exports and snapshots enable only after an actual Python run. This provides a useful first visit without pretending a browser computation has already happened.
+
+## Interactive engineering workflows
+
+The visual builder edits the same pipeline JSON consumed by the native API and browser worker. It prevents deleting referenced nodes, offers an in-memory graph undo stack, and defers cycle validation to Python. The native graph limit remains 40 activities.
+
+The incident arena uses `challenges.py` for deterministic grading, with three fixed scenarios. Grading checks preserved topology/duration/failure definitions, worker and retry bounds, repair choice, completion, and timing. Changing the user-editable completion target does not change an exercise's fixed deadline. Exercises are not a secure exam or a claim about real production incidents.
+
+Capacity planning reruns the same recovery graph eight times for worker budgets 1–8. The recommendation is the first complete run that meets the requested target. Compute utilization excludes retry backoff; it is not an Azure price or cost estimate.
+
+The experiment vault uses browser localStorage only after an explicit Save action. It stores up to 12 named input models. Inputs can be reopened, exported, imported, or deleted. Import parsing is tested in Node and limits the model to known fields and 40 activity objects; the Python engine validates analytical details when run. Malformed or unavailable storage produces a visible error. Snapshots remain memory-only. There is no automatic persistence or cloud synchronization.
