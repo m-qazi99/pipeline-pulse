@@ -4,7 +4,7 @@ from collections import Counter
 from common import *
 RULES=[(('timeout','timed out'),'Timeout / capacity','Check activity duration, integration-runtime capacity, network latency, and retry policy.'),(('unauthorized','forbidden','403','401','authentication'),'Access / authentication','Check identity, token expiry, role assignments, and storage/database permissions.'),(('schema','column','mapping','type mismatch'),'Schema / mapping','Compare source and sink schemas; review changed columns and conversion rules.'),(('not found','404','pathnotfound'),'Missing resource','Confirm the path, dataset parameters, container, and resource existence.'),(('throttl','429','rate limit'),'Throttling','Review concurrency and provider quotas; consider exponential backoff with jitter.')]
 
-def run(p):
+def legacy_run(p):
     raw=p.get('logs','')
     if not isinstance(raw,str) or len(raw)>MAX_CHARS:raise ValueError('Logs must be text under 2 MB.')
     try:events=json.loads(raw)
@@ -30,3 +30,11 @@ def run(p):
         output.append([activity,status,f'{float(sec):g}',category,message[:400]])
     if not failed:findings.append(finding('success','No failed events reported','Running, cancelled, and unknown statuses still require review; only explicit failure statuses are classified.'))
     return result('Pipeline review complete',[metric('Activities',len(events)),metric('Failed',failed),metric('Success rate',f'{100*sum(str(e.get("status","")).lower()in {"succeeded","success","completed"}for e in events)/len(events):.1f}%'),metric('Activity seconds',f'{duration:g}','Sum of durations; not wall-clock duration')],['Activity','Status','Seconds','Classification','Error / message'],output,findings,[{'label':k,'value':v}for k,v in groups.items()],[{'name':'incident-review.txt','content':'\n'.join(report)}])
+
+
+def run(p):
+    if not isinstance(p,dict):raise ValueError("Send a JSON object.")
+    if p.get("workspace")=="studio":
+        from lab import run as studio_run
+        return studio_run(p)
+    return legacy_run(p)

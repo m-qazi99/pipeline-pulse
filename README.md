@@ -1,72 +1,85 @@
-<a href="https://m-qazi99.github.io/pipeline-pulse/"><img src="docs/banner.svg" alt="Pipeline Pulse — INCIDENT INVESTIGATION" width="100%"></a>
+<p align="center"><a href="https://m-qazi99.github.io/pipeline-pulse/"><img src="docs/banner.svg" alt="Pipeline Pulse Studio — A pipeline graph that explains the cost of a failure." width="100%"></a></p>
+<p align="center"><a href="https://m-qazi99.github.io/pipeline-pulse/"><strong>Launch the interactive studio ↗</strong></a> · <a href="#run-locally">Run Python locally</a> · <a href="docs/ARCHITECTURE.md">Architecture</a> · <a href="tests/test_studio.py">Tests</a></p>
+<p align="center"><img src="https://github.com/m-qazi99/pipeline-pulse/actions/workflows/tests.yml/badge.svg" alt="Python engine checks"> <img src="https://img.shields.io/badge/Python-3.11%2B-477a62?style=flat-square" alt="Python 3.11+"> <img src="https://img.shields.io/badge/License-MIT-bb985b?style=flat-square" alt="MIT license"></p>
 
-**[Open the live app ↗](https://m-qazi99.github.io/pipeline-pulse/)** · [Python engine](src/engine.py) · [Tests](tests/) · [Example input](examples/sample.json)
+# Pipeline Pulse Studio
 
-Inspect structured activity logs, group failure signals, and prepare an incident handoff with rule-based diagnostic suggestions.
+**A pipeline graph that explains the cost of a failure.**
 
-## What works
+An interactive failure laboratory for data pipelines. Shape a DAG, inject a fault, and watch the consequences propagate.
 
-- Failure classification
-- Activity duration review
-- Incident handoff export
-- Transparent diagnostic rules
+## Explore the product
 
-- Sample inputs, local file uploads, real result tables and charts.
-- JSON and Markdown report exports; domain-specific text/CSV exports where applicable.
-- Identical dependency-free Python engine in the live browser app, local API, and CLI.
+Select **Cascade failure** → inspect `transform` → open **Recovery comparison** → compare completion coverage → replay the execution.
+
+| Capability | What you can inspect |
+|---|---|
+| Discrete-event DAG scheduling | Python-computed results, accessible controls, and exportable evidence |
+| Failure blast radius | Python-computed results, accessible controls, and exportable evidence |
+| Interactive execution replay | Python-computed results, accessible controls, and exportable evidence |
+| Critical path and recovery comparisons | Python-computed results, accessible controls, and exportable evidence |
+
+The interface includes three synthetic scenarios, four workspace views, light multicolor themes, editable inputs, local file loading, in-memory experiment snapshots, keyboard shortcuts, and downloadable artifacts. The **input editor** exposes the real experiment rather than hiding the model behind a decorative dashboard.
+
+## Python mechanics
+
+The scheduler validates a DAG, runs ready tasks under a finite worker budget, advances a discrete event queue, retries bounded failures with capped exponential backoff, and propagates failure to dependent tasks. The healthy critical path is computed separately as a dependency lower bound.
 
 ## Run locally
 
-Python 3.10+; no pip packages required for the engine or local server.
+No Python packages are required. Use Python 3.11 or newer.
 
-```sh
+```bash
+git clone https://github.com/m-qazi99/pipeline-pulse.git
+cd pipeline-pulse
 python server.py
-# Open http://127.0.0.1:8000
 ```
 
-The browser UI loads Pyodide from a pinned jsDelivr URL. An internet connection is required for the first runtime load. Alternatively use native Python:
+Open **http://127.0.0.1:8000**. The local server exposes the native Python API; the web UI uses the browser worker so its behavior matches the public demo. The public site requires a modern browser with WebAssembly and access to the runtime CDN.
 
-```sh
-python src/cli.py < examples/sample.json
+```bash
+# Native Python CLI: no browser, CDN, or third-party packages
+python src/cli.py < examples/studio.json
+
+# Native Python HTTP API
+curl -s http://127.0.0.1:8000/api/analyze \
+  -H 'Content-Type: application/json' \
+  --data-binary @examples/studio.json
+
+# Engine, boundary, and regression tests
 python -m unittest discover -s tests -v
 python scripts/check_site.py
 ```
 
-## Local API
-
-```sh
-curl -X POST http://127.0.0.1:8000/api/analyze \
-  -H 'Content-Type: application/json' \
-  --data-binary @examples/sample.json
-```
-
-The local API is bound to loopback and is a development server, not a hardened production service. The public site uses a Python WebAssembly worker instead of a backend server.
+`examples/studio.json` is the complete version-2 experiment request. The `workspace: "studio"` field selects the advanced engine in `src/lab.py`. The original version-1 API remains available through `examples/sample.json` for compatibility. Errors return HTTP 400 with an `error` message; successful requests return metrics, evidence, artifacts, and a structured `lab` object for visualization.
 
 ## Architecture
 
-| Layer | Implementation |
-| --- | --- |
-| Python analysis | `src/engine.py` and `src/common.py`, standard library only |
-| Public browser execution | Pyodide 0.27.7, pinned CDN, dedicated Web Worker |
-| Interface | Semantic HTML, responsive CSS, vanilla JavaScript, text-safe rendering |
-| Local API | Python `http.server`, `POST /api/analyze` |
-| Deployment | GitHub Pages from `main` / `docs` |
-| Validation | Unit tests, sample CLI, native/browser engine parity check, GitHub Actions |
+```mermaid
+flowchart TD
+    I["Editable inputs and controls"] --> W["Background Python worker"]
+    W --> E["engine.py → lab.py"]
+    E --> V["Interactive investigation views"]
+    E --> X["Evidence and artifacts"]
+    A["Native CLI or local HTTP API"] --> E
+```
 
-## Input contract and limitations
+- `src/lab.py` — the advanced, dependency-free Python computation.
+- `src/engine.py` — explicit version routing and original API compatibility.
+- `docs/lab.py`, `docs/engine.py`, `docs/common.py` — byte-identical browser copies, checked by CI.
+- `docs/studio.js` — rendering, interaction, worker lifecycle; no duplicate analytical algorithm.
+- `docs/worker.js` — pinned Pyodide 0.27.7 runtime in a Web Worker.
+- `tests/` — **24 automated tests**, including scenario boundaries and regressions.
+- `.github/workflows/tests.yml` — tests and browser/native source parity on each push.
 
-Diagnostic suggestions are hypotheses, not confirmed root causes. Durations are summed activity time, not pipeline wall-clock time.
+## Scope and limitations
 
-CSV/text inputs are capped at 2 MB. CSV engines allow up to 10,000 rows; result tables show the first 200 rows, while exports include all results. Browser analysis can be cancelled by terminating its worker. The public app sends no input to an analysis server; runtime files are fetched from jsDelivr and application files from GitHub Pages. No analytics, accounts, or telemetry are included.
+Retries occupy a worker during backoff. Each failed attempt consumes the configured activity duration. Scheduling is deterministic and uses input topological order as a tie-breaker. This is a synthetic digital twin, not an Azure connector or cloud execution engine.
 
-Privacy-sensitive uploads should still be reviewed for your organization's data-handling requirements. Avoid putting private datasets into the public repository.
+Inputs remain in the active tab. Initial runtime files come from jsDelivr and fonts from Google Fonts; no input is sent to these services. Inputs and snapshots are not automatically persisted. Exported experiments include their input; review before sharing. File contents are limited to 2 MB and CSV datasets to 10,000 rows.
 
-## Reuse and deployment
+## Design and research
 
-Publish the `docs` directory with GitHub Pages. Keep `docs/engine.py` and `docs/common.py` synchronized with `src/` after engine changes; the site check fails when they differ. Update the canonical URL and links if deploying under another account.
+This studio is an independent implementation by **Muzammil Qazi**, developed with Codex assistance as a portfolio engineering project. Synthetic scenarios demonstrate the algorithms; they are not employer deliverables or evidence of production adoption. See [design decisions](docs/ARCHITECTURE.md) and [research references](docs/RESEARCH.md).
 
-## About
-
-An independent portfolio project by [Muzammil Qazi](https://m-qazi99.github.io/), created in October 2026 with AI-assisted implementation and human-directed review. It is not an employer deliverable, evidence of production adoption, or a claim of measured business impact.
-
-[MIT license](LICENSE) · [Pyodide documentation](https://pyodide.org/en/stable/usage/index.html)
+[Portfolio](https://m-qazi99.github.io/) · [GitHub](https://github.com/m-qazi99) · [MIT](LICENSE)
