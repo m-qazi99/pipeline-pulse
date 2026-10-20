@@ -8,6 +8,8 @@ class StudioTests(unittest.TestCase):
  def sample(self):return json.loads((R/'examples/studio.json').read_text())
  def execute(self,**changes):
   p=self.sample();p.update(changes);return run(p)['lab']
+ def test_preview_metrics_match_python(self):
+  source=(R/'docs/sample-result.js').read_text();preview=json.loads(source.removeprefix('window.SAMPLE_RESULT=').removesuffix(';'));self.assertEqual(preview['metrics'],run(self.sample())['metrics'])
  def test_json_serializable(self):json.dumps(run(self.sample()),allow_nan=False)
  def test_fault_propagates(self):
   l=self.execute();s=l['scenario'];self.assertEqual(s['failed'],1);self.assertEqual(s['blocked'],4);self.assertEqual(s['succeeded'],7)
