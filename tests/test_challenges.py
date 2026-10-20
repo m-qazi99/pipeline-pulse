@@ -31,3 +31,6 @@ class ChallengeTests(unittest.TestCase):
  def test_completion_target_is_validated(self):
   with self.assertRaises(ValueError):self.request('capacity',deadline=0)
  def test_asset_catalog_matches_browser(self):self.assertEqual(json.loads((R/'docs/challenges.json').read_text()),catalog())
+
+ def test_dictionary_like_ids_are_valid_data(self):
+  p={'workspace':'studio','pipeline':json.dumps([{'id':'constructor','duration':1,'depends':[]},{'id':'__proto__','duration':1,'depends':['constructor']}]),'inject':'','repair':''};self.assertEqual(run(p)['lab']['scenario']['succeeded'],2)

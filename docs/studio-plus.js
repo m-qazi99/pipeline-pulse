@@ -8,7 +8,7 @@ window.PulsePlus={
     bar.innerHTML='<div><span class="eyebrow">GO BEYOND THE DEMO</span><strong>Build. Investigate. Keep your discoveries.</strong></div><div><button data-open-mode="4">＋ Visual builder</button><button data-open-mode="5">◎ Incident arena</button><button data-open-mode="6">▣ My experiments</button></div>';
     $('.commandbar').after(bar);
     $$('[data-open-mode]').forEach(b=>b.onclick=()=>switchView(Number(b.dataset.openMode)));
-    fetch('challenges.json?v=20261020.4.1').then(r=>{if(!r.ok)throw new Error('Incident scenarios could not load.');return r.json();}).then(cases=>{this.cases=cases;if(S.view===5)this.renderArena();}).catch(e=>showError(e.message));
+    fetch('challenges.json?v=20261020.4.2').then(r=>{if(!r.ok)throw new Error('Incident scenarios could not load.');return r.json();}).then(cases=>{this.cases=cases;if(S.view===5)this.renderArena();}).catch(e=>showError(e.message));
     if(location.hash==='#arena')switchView(5);
     if(location.hash==='#builder')switchView(4);
     if(location.hash==='#vault')switchView(6);
@@ -25,7 +25,7 @@ window.PulsePlus={
   },
   change(nodes){
     this.undo.push($('#f-pipeline').value);if(this.undo.length>20)this.undo.shift();
-    $('#f-pipeline').value=JSON.stringify(nodes,null,2);this.activeChallenge=null;S.positions={};
+    $('#f-pipeline').value=JSON.stringify(nodes,null,2);this.activeChallenge=null;S.positions=Object.create(null);
   },
   renderBuilder(){
     let nodes;try{nodes=this.nodes();}catch(e){$('#view').innerHTML=heading('Visual pipeline builder','Fix the JSON in the input editor to continue.')+'<p class="small">'+esc(e.message)+'</p>';return;}
@@ -60,7 +60,7 @@ window.PulsePlus={
     for(const [key,value]of Object.entries({...c.initial,deadline:c.deadline})){
       $('#f-'+key).value=value;if($('#o-'+key))$('#o-'+key).textContent=value;
     }
-    this.activeChallenge=id;$$('[data-preset]').forEach(b=>b.classList.remove('selected'));S.positions={};S.node=null;this.renderArena();analyze();
+    this.activeChallenge=id;$$('[data-preset]').forEach(b=>b.classList.remove('selected'));S.positions=Object.create(null);S.node=null;this.renderArena();analyze();
   },
   readVault(){
     try{const raw=localStorage.getItem(this.storageKey);if(!raw)return [];const v=JSON.parse(raw);if(!Array.isArray(v))throw new Error();return v.slice(0,12).filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&x.input);}
@@ -74,7 +74,7 @@ window.PulsePlus={
     const p=PulseVault.normalize(value);
     if(S.busy)stop();
     for(const [key,,type]of C.fields){const e=$('#f-'+key);e.value=p[key]??C.sample[key]??'';if(type==='range')$('#o-'+key).textContent=e.value;}
-    this.activeChallenge=p.challenge&&this.cases.some(c=>c.id===p.challenge)?p.challenge:null;S.positions={};this.editing=null;
+    this.activeChallenge=p.challenge&&this.cases.some(c=>c.id===p.challenge)?p.challenge:null;S.positions=Object.create(null);this.editing=null;
     S.result=null;S.input=null;S.preview=false;$('#export').disabled=true;$('#snapshot').disabled=true;$('#artifacts').replaceChildren();$('#metrics').innerHTML=metricHTML([{label:'Model',value:'Restored'},{label:'Activities',value:JSON.parse(p.pipeline).length},{label:'Results',value:'Not run'},{label:'Storage',value:'Local only'}]);$('#runtime').textContent='Draft restored · run Python to compute results';toast('Experiment restored locally. Run to compute its results.');switchView(0);
   },
   renderVault(){
