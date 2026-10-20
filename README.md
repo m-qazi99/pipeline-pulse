@@ -74,7 +74,7 @@ flowchart TD
 - `docs/lab.py`, `docs/engine.py`, `docs/common.py` — byte-identical browser copies, checked by CI.
 - `docs/studio.js` — rendering, interaction, worker lifecycle; no duplicate analytical algorithm.
 - `docs/worker.js` — pinned Pyodide 0.27.7 runtime in a Web Worker.
-- `tests/` — **25 automated tests**, including scenario boundaries and regressions.
+- `tests/` — **26 automated tests**, including scenario boundaries and regressions.
 - `.github/workflows/tests.yml` — tests and browser/native source parity on each push.
 
 ## Scope and limitations

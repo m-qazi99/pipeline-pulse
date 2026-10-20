@@ -43,3 +43,6 @@ class StudioTests(unittest.TestCase):
   with self.assertRaises(ValueError):self.execute(concurrency=1.5)
  def test_nonfinite_duration_rejected(self):
   with self.assertRaises(ValueError):self.execute(pipeline='[{"id":"a","duration":"NaN"}]',inject='',repair='')
+
+ def test_injected_fault_does_not_replace_editable_intrinsic_failure(self):
+  node=next(n for n in self.execute()['nodes'] if n['id']=='transform');self.assertEqual(node['intrinsic_failures'],0);self.assertEqual(node['failures'],3)

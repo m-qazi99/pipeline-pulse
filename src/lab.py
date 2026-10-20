@@ -56,6 +56,7 @@ def simulate(nodes,order,slots,retries,backoff,repair=None):
 
 def run(p):
     nodes,order,levels=graph(p.get('pipeline',''))
+    intrinsic={k:n['failures'] for k,n in nodes.items()}
     slots=integer(p.get('concurrency',3),'Concurrency',1,8);retries=integer(p.get('retries',0),'Retries',0,4);backoff=integer(p.get('backoff',5),'Backoff',0,30)
     inject=p.get('inject','')
     if inject:
@@ -82,4 +83,4 @@ def run(p):
     rows=[[r['id'],r['status'],r['start'] if r['start'] is not None else '—',r['end'],r['attempts'],r['wait']] for r in primary['records']]
     report={'scenario':primary,'recovery':recovered,'critical_path':path,'critical_lower_bound':earliest[end],'blast_radius':sorted(affected),'assumptions':['Deterministic synthetic simulation; no Azure resources are contacted.','Retries hold the worker slot during backoff. Each failed attempt consumes the configured duration.','Critical path is the dependency lower bound with healthy nodes and unlimited concurrency.']}
     out=result('Pipeline simulation complete',[metric('Completed',f"{primary['succeeded']}/{len(nodes)}"),metric('Blocked assets',primary['blocked']),metric('Wall time',f"{primary['wall_time']}s"),metric('Recovery completion',f"{recovered['succeeded']}/{len(nodes)}")],['Activity','Outcome','Start (s)','End (s)','Attempts','Backoff (s)'],rows,[finding('info','Recovery is a comparison, not an executed fix','The comparison removes failures from the selected recovery node. It does not change cloud resources.')],artifacts=[{'name':'pipeline-experiment.json','content':json.dumps(report,indent=2)},{'name':'pipeline-definition.json','content':json.dumps(list(nodes.values()),indent=2)}])
-    out['lab']={**report,'nodes':[{**nodes[k],'level':levels[k]} for k in order]};return out
+    out['lab']={**report,'nodes':[{**nodes[k],'intrinsic_failures':intrinsic[k],'level':levels[k]} for k in order]};return out
