@@ -41,3 +41,10 @@ The incident arena uses `challenges.py` for deterministic grading, with three fi
 Capacity planning reruns the same recovery graph eight times for worker budgets 1–8. The recommendation is the first complete run that meets the requested target. Compute utilization excludes retry backoff; it is not an Azure price or cost estimate.
 
 The experiment vault uses browser localStorage only after an explicit Save action. It stores up to 12 named input models. Inputs can be reopened, exported, imported, or deleted. Import parsing is tested in Node and limits the model to known fields and 40 activity objects; the Python engine validates analytical details when run. Malformed or unavailable storage produces a visible error. Snapshots remain memory-only. There is no automatic persistence or cloud synchronization.
+
+
+## Version 2.1 review-to-handoff layer
+
+`engine.run` preserves legacy requests. Studio requests run the existing analysis, then `review.attach` derives deterministic priorities from the computed result. The review layer does not modify inputs or perform remediation. The mirrored `review.py` is downloaded by the browser worker and checked for native/browser parity.
+
+`review-desk.js` listens for `workbench:result`, renders Python priorities, filters by severity and retains inspection checks in memory. New results and page reloads clear those checks. Python exports unchecked Markdown and JSON; the UI exports Markdown with the visitor's checkmarks. A checked item is not approval or certification. See [API](API.md), [user guide](USER_GUIDE.md), and [development workflow](DEVELOPMENT.md).

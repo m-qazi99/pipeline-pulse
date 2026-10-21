@@ -1,7 +1,7 @@
 from pathlib import Path
 import ast,json
 r=Path(__file__).resolve().parents[1]
-for name in ['engine.py','common.py','lab.py','challenges.py']:
+for name in ['engine.py','common.py','lab.py','review.py','review.py','challenges.py']:
  assert (r/'src'/name).read_bytes()==(r/'docs'/name).read_bytes(), 'Browser/native engines diverged'
  ast.parse((r/'src'/name).read_text())
 for name in ['index.html','studio.js','worker.js','studio-config.js','sample-result.js','studio.css','favicon.svg','studio-plus.js','vault.js','challenges.json']:
